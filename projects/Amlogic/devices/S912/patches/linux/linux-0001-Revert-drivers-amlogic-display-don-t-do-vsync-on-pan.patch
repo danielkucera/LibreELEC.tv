@@ -1,0 +1,40 @@
+From d98e6e6ae84b0103770d01c88f262c4da6c2b442 Mon Sep 17 00:00:00 2001
+From: kszaq <kszaquitto@gmail.com>
+Date: Sat, 3 Feb 2018 21:41:56 +0100
+Subject: [PATCH] Revert "drivers/amlogic/display: don't do vsync on pan, do it
+ on FBIO_WAITFORVSYNC"
+
+This reverts commit a7d7f8bafe152837bbdf1950863a32c9dda53b9b.
+---
+ drivers/amlogic/display/osd/osd_fb.c | 2 +-
+ drivers/amlogic/display/osd/osd_hw.c | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/amlogic/display/osd/osd_fb.c b/drivers/amlogic/display/osd/osd_fb.c
+index 64caebf..93b326b 100644
+--- a/drivers/amlogic/display/osd/osd_fb.c
++++ b/drivers/amlogic/display/osd/osd_fb.c
+@@ -916,7 +916,7 @@ static int osd_ioctl(struct fb_info *info, unsigned int cmd, unsigned long arg)
+ 			break;
+ 		}
+ 	case FBIO_WAITFORVSYNC:
+-		osd_wait_vsync_hw();
++		osd_wait_vsync_event();
+ 		ret = copy_to_user(argp, &ret, sizeof(u32));
+ 		break;
+ 	default:
+diff --git a/drivers/amlogic/display/osd/osd_hw.c b/drivers/amlogic/display/osd/osd_hw.c
+index 1e70ce8..1040a57 100644
+--- a/drivers/amlogic/display/osd/osd_hw.c
++++ b/drivers/amlogic/display/osd/osd_hw.c
+@@ -2296,6 +2296,7 @@ void osd_pan_display_hw(u32 index, unsigned int xoffset, unsigned int yoffset)
+ 		osd_hw.pandata[index].y_start += diff_y;
+ 		osd_hw.pandata[index].y_end   += diff_y;
+ 		add_to_update_list(index, DISP_GEOMETRY);
++		osd_wait_vsync_hw();
+ 	}
+ #ifdef CONFIG_AM_FB_EXT
+ 	osd_ext_clone_pan(index);
+-- 
+2.7.4
+
